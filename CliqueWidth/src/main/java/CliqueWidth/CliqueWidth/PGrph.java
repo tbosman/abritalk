@@ -13,7 +13,7 @@ import grph.in_memory.InMemoryGrph;
  */
 public class PGrph extends InMemoryGrph{
 	
-	private UFPartition<Integer> vertexComponents;
+	private UFPartition<Integer> vertexComponents = new UFPartition<Integer>();
 	
 	/**
 	 * 
@@ -24,7 +24,16 @@ public class PGrph extends InMemoryGrph{
 	@Override
 	public void addVertex(int v){
 		super.addVertex(v);
-		
+		vertexComponents.makeSet(v);
 	}
+	
+	@Override
+	public int addVertex(){
+		int v = super.addVertex();
+		vertexComponents.makeSet(v);
+		return v;
+	}
+	
+	
 
 }

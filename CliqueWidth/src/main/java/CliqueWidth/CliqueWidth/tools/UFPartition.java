@@ -13,6 +13,7 @@ public class UFPartition<T> {
 	private class Node<T>{
 		private final T e; 
 		Node<T> parent;
+		private int subTreeSize = 1; 
 		Node(T e){
 			this.e = e;
 			this.parent = this; 
@@ -30,10 +31,16 @@ public class UFPartition<T> {
 		}
 		public void setParent(Node<T> parent) {
 			this.parent = parent;
+			parent.subTreeSize += this.subTreeSize;
 		}
 		public T getE() {
 			return e;
-		}		
+		}
+		public int getSubTreeSize() {
+			return subTreeSize;
+		}
+
+		
 		
 	}
 	
@@ -67,8 +74,14 @@ public class UFPartition<T> {
 	}
 	
 	public void Union(T e1, T e2){		
-		getNode(e2).setParent(getNode(e1));	
+		Node<T> b1 = getNode(e1); 
+		getNode(e2).setParent(b1);
 		
+		
+	}
+	
+	public int size(T e){
+		return getNode(e).getRoot().getSubTreeSize();
 	}
 
 
