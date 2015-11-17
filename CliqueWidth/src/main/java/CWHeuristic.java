@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.util.Iterator;
 
 import toools.set.DefaultIntSet;
 import toools.set.IntSet;
@@ -37,13 +38,16 @@ public class CWHeuristic {
 			
 			System.out.println("Merging: "+u+"-"+v);
 			try {
+				if(false)
 				System.in.read();
+//				int a =1;
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 			executeLabelMerge(u, v);
-			
+			System.out.println(components);
 		}
+		
 		
 		return null;//TODO return
 	}
@@ -54,6 +58,11 @@ public class CWHeuristic {
 		System.out.println("Required width: "+getRequiredWidth(reqC));
 		if(reqC.size() > 1) {
 			pTree.disjointMerge(reqC);
+			int[] toMergeComponents = reqC.toIntArray();
+			for(int i=1; i<toMergeComponents.length;i++){
+				components.union(toMergeComponents[0], toMergeComponents[i]);
+			}		
+			
 		}
 		if(reqV.size() == 2 || reqC.size() == 1) {
 			//can merge labels immediately after merging components because no required vertices 
@@ -65,8 +74,8 @@ public class CWHeuristic {
 		g.getVertexLabelProperty().setValue(Math.min(u,v), g.getVertexLabelProperty().getValueAsString(Math.min(u,v))+","+g.getVertexLabelProperty().getValueAsString(Math.max(u,v)));
 //		g.removeEdge(u,v);;
 		contractVertices(Math.min(u,v), Math.max(u,v));
+		components.remove(Math.max(u, v));
 		
-		components.Union(u,v);
 	}
 	
 	
@@ -106,7 +115,10 @@ public class CWHeuristic {
 	private IntSet getRequiredVertices(int u, int v) {
 		IntSet reqVertices = new DefaultIntSet(); 
 		reqVertices.addAll(u, v);
-		reqVertices.addAll(IntSets.difference(g.getNeighbours(u), g.getNeighbours(v)));
+		IntSet nU = g.getNeighbours(u);
+		IntSet nV = g.getNeighbours(v);
+		reqVertices.addAll(IntSets.difference(IntSets.union(g.getNeighbours(u), g.getNeighbours(v)), IntSets.intersection(g.getNeighbours(u), g.getNeighbours(v)) ) );
+		
 		return reqVertices;		
 	}
 	

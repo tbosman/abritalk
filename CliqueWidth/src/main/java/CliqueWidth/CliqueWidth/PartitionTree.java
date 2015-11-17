@@ -105,7 +105,7 @@ public class PartitionTree {
 			throw new Error("Merging labels from different components");
 		}
 		Node<UFPartition<Integer>> comp =  leafs.get(u).getRoot();
-		comp.getE().Union(u, v);
+		comp.getE().union(u, v);
 	}
 	
 

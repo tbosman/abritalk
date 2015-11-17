@@ -69,7 +69,8 @@ public class UFPartition<T> {
 		Node<T> node = getNode(e);
 		node.parent.treeShrunk(1);
 		node.parent = node;
-		nodes.remove(node);
+		nodes.remove(node.getE());
+		
 		
 	}
 
@@ -97,11 +98,11 @@ public class UFPartition<T> {
 		return null; 
 	}
 	
-	public void Union(T e1, T e2){		
+	public void union(T e1, T e2){		
 		Node<T> b1 = getNode(e1); 
-		getNode(e2).setParent(b1);			
+		getNode(e2).getRoot().setParent(b1);			
 	}
-	public void Union(T... eArr) {
+	public void union(T... eArr) {
 		Node<T> b1 = getNode(eArr[0]);
 		for(int i=1;i<eArr.length;i++) {
 			getNode(eArr[i]).setParent(b1);
@@ -153,5 +154,13 @@ public class UFPartition<T> {
 			np.nodes.put(n.getE(), new Node<T>(n.getE()));
 		}
 		return np;
+	}
+	
+	public String toString(){ 
+		String out = "";
+		for(Node n : nodes.values()){
+			out += "n: "+n.getE()+",p: "+n.getParent().getE()+", r:"+n.getRoot().getE()+"/ ";
+		}
+		return out;
 	}
 }
