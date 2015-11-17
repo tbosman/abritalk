@@ -34,6 +34,11 @@ public class PGrph extends InMemoryGrph{
 		return v;
 	}
 	
+	@Override
+	public void contractVertices(int a, int b) {
+		super.contractVertices(b, a);
+	}
+	
 	
 
 }

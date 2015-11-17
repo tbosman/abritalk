@@ -1,6 +1,8 @@
 package CliqueWidth.CliqueWidth.tools;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 
 /**
@@ -39,18 +41,37 @@ public class UFPartition<T> {
 		public int getSubTreeSize() {
 			return subTreeSize;
 		}
+		
+		public void treeShrunk(int numRemoved) {
+			subTreeSize -= numRemoved;
+			assert subTreeSize >0; 
+			if(parent!=this)parent.treeShrunk(numRemoved);
+		}
 
 		
 		
 	}
 	
-	ArrayList<Node<T>> nodes = new ArrayList<Node<T>>();
+	HashMap<T, Node<T>> nodes = new HashMap<T, Node<T>>();
 	
 	public void makeSet(T e){
 		// TODO assert no double elements
-		nodes.add(new Node<T>(e));
+		nodes.put(e, new Node<T>(e));
 	}
 	
+	public void makeSets(Collection<T> eArr) {
+		for(T e : eArr) {
+			makeSet(e);
+		}
+	}
+	
+	public void remove(T e) {
+		Node<T> node = getNode(e);
+		node.parent.treeShrunk(1);
+		node.parent = node;
+		nodes.remove(node);
+		
+	}
 
 	
 	public T find(T e){
@@ -62,21 +83,29 @@ public class UFPartition<T> {
 	}
 	
 	private Node<T> getNode(T e){
-		Iterator<UFPartition<T>.Node<T>> it = nodes.iterator();
-		Node<T> node;
-		while(it.hasNext()){
-			node = it.next();
-			if(node.getE().equals(e)){
-				return node;
-			}
+//		Iterator<UFPartition<T>.Node<T>> it = nodes.iterator();
+//		Node<T> node;
+//		while(it.hasNext()){
+//			node = it.next();
+//			if(node.getE().equals(e)){
+//				return node;
+//			}
+//		}
+		if(nodes.containsKey(e)) {
+			return nodes.get(e);
 		}
 		return null; 
 	}
 	
 	public void Union(T e1, T e2){		
 		Node<T> b1 = getNode(e1); 
-		getNode(e2).setParent(b1);
-		
+		getNode(e2).setParent(b1);			
+	}
+	public void Union(T... eArr) {
+		Node<T> b1 = getNode(eArr[0]);
+		for(int i=1;i<eArr.length;i++) {
+			getNode(eArr[i]).setParent(b1);
+		}
 		
 	}
 	
@@ -84,5 +113,45 @@ public class UFPartition<T> {
 		return getNode(e).getRoot().getSubTreeSize();
 	}
 
-
+	public static <U> UFPartition<U> fromElement(U e){
+		UFPartition<U> p = new UFPartition<U>();
+		p.makeSet(e);
+		return p;
+	}
+	
+	/**
+	 * Creates new partition by disjoint union of this and p2, elements are cloned
+	 * @param p2
+	 * @return
+	 */
+	public void mergeDisjoint(UFPartition<T> p2){
+		p2 = p2.clone();
+		for(Node<T> n : p2.nodes.values()) {
+			assert !nodes.containsKey(n.getE());
+			nodes.put(n.getE(), new Node<T>(n.getE()));
+		}
+		for(Node<T> n : p2.nodes.values()) {
+			Node<T> newNode = getNode(n.getE());
+			Node<T> newNodeRoot = getNode(n.getRoot().getE());
+			newNode.setParent(newNodeRoot);
+			nodes.put(n.getE(), new Node<T>(n.getE()));
+		}
+		
+	}
+	/**
+	 * Deep copy
+	 */
+	public UFPartition<T> clone(){
+		UFPartition<T> np = new UFPartition<T>();
+		for(Node<T> n : this.nodes.values()) {
+			np.nodes.put(n.getE(), new Node<T>(n.getE()));
+		}
+		for(Node<T> n : this.nodes.values()) {
+			Node<T> newNode = np.getNode(n.getE());
+			Node<T> newNodeRoot = np.getNode(n.getRoot().getE());
+			newNode.setParent(newNodeRoot);
+			np.nodes.put(n.getE(), new Node<T>(n.getE()));
+		}
+		return np;
+	}
 }
