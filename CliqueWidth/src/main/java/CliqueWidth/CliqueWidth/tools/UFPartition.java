@@ -27,8 +27,9 @@ public class UFPartition<T> {
 		public Node<T> getRoot(){
 			if(getParent().equals(this)){
 				return this;
-			}else{
-				return parent.getRoot();
+			}else{				
+				this.parent = parent.getRoot();
+				return this.parent;
 			}
 		}
 		public void setParent(Node<T> parent) {
@@ -68,7 +69,7 @@ public class UFPartition<T> {
 	public void remove(T e) {
 		Node<T> node = getNode(e);
 		node.parent.treeShrunk(1);
-		node.parent = node;
+//		node.parent = node;
 		nodes.remove(node.getE());
 		
 		
@@ -162,5 +163,12 @@ public class UFPartition<T> {
 			out += "n: "+n.getE()+",p: "+n.getParent().getE()+", r:"+n.getRoot().getE()+"/ ";
 		}
 		return out;
+	}
+	
+	public Collection<T> values(){
+//		ArrayList<T> v
+//		return nodes.values();
+		return null;
+		//TODO
 	}
 }

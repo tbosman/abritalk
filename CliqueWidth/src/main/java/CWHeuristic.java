@@ -144,6 +144,7 @@ public class CWHeuristic {
 		g.clique();
 		
 		g = PetersonGraph.petersenGraph(5, 2);
+		g = new Paley13Generator().paley13Generator();
 		for(int i : g.getVertices().toIntArray()) {
 			g.getVertexLabelProperty().setValue(i, ""+i);
 		}

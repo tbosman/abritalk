@@ -8,6 +8,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import CliqueWidth.CliqueWidth.tools.UFPartition;
+import grph.Grph;
+import grph.in_memory.InMemoryGrph;
 import toools.set.DefaultIntSet;
 import toools.set.IntSet;
 
@@ -106,6 +108,15 @@ public class PartitionTree {
 		}
 		Node<UFPartition<Integer>> comp =  leafs.get(u).getRoot();
 		comp.getE().union(u, v);
+	}
+	
+	public Grph toGrph(){
+		Grph g = new InMemoryGrph();
+		for(Node<UFPartition<Integer>> l : leafs.values()){
+//			g.addVertex(l.getE()); 
+		}
+		return null;
+		//TODO
 	}
 	
 
