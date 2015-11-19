@@ -38,7 +38,7 @@ public class CWHeuristic {
 			
 			System.out.println("Merging: "+u+"-"+v);
 			try {
-				if(false)
+//				if(false)
 				System.in.read();
 //				int a =1;
 			} catch (IOException e) {
@@ -145,6 +145,8 @@ public class CWHeuristic {
 		
 		g = PetersonGraph.petersenGraph(5, 2);
 		g = new Paley13Generator().paley13Generator();
+		g = new ChvatalGenerator().chvatalGenerator();
+		g = PetersonGraph.petersenGraph(20, 3);
 		for(int i : g.getVertices().toIntArray()) {
 			g.getVertexLabelProperty().setValue(i, ""+i);
 		}
