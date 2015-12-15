@@ -3,7 +3,9 @@ package CliqueWidth.CliqueWidth.tools;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 /**
  * Simple Union-Find implementation
@@ -89,7 +91,7 @@ public class UFPartition<T> {
 //		Node<T> node;
 //		while(it.hasNext()){
 //			node = it.next();
-//			if(node.getE().equals(e)){
+//			if(node.getE().equals(e)){ 
 //				return node;
 //			}
 //		}
@@ -112,6 +114,9 @@ public class UFPartition<T> {
 	}
 	
 	public int size(T e){
+		if(getNode(e) == null){
+			System.out.println("wtf");
+		}
 		return getNode(e).getRoot().getSubTreeSize();
 	}
 
@@ -165,6 +170,47 @@ public class UFPartition<T> {
 		return out;
 	}
 	
+	
+	public ArrayList<T> getBlock(T e){
+		T root = find(e);
+		ArrayList<T> block = new ArrayList<T>();
+		for(Node<T> node : nodes.values()){
+			if(node.getRoot().e.equals(root)){
+				block.add(node.getE());
+			}
+		}
+		return block;
+		
+	}
+	
+	public String toMathString(){//String in set notation 
+		HashMap<T, ArrayList<T>> blocksByIdx = new HashMap<T, ArrayList<T>>(); 
+		
+		for(Node<T> node : nodes.values()){
+			if(!blocksByIdx.containsKey(node.getRoot().e)){
+				blocksByIdx.put(node.getRoot().e, new ArrayList<T>());
+				
+			}
+			blocksByIdx.get(node.getRoot().e).add(node.e);
+		}
+		
+		
+		
+		String mathString = "{";
+		
+		for(ArrayList<T> block : blocksByIdx.values()){
+			mathString += "{"+block.get(0);
+			for(int i =1; i< block.size();i++){
+				mathString +=", "+block.get(i);
+			}
+			mathString += "}"; 
+					
+		}
+		
+		 mathString += "}";
+		
+		return mathString;
+	}
 	public Collection<T> values(){
 //		ArrayList<T> v
 //		return nodes.values();

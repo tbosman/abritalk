@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Iterator;
 
 import toools.set.DefaultIntSet;
@@ -31,6 +32,23 @@ public class CWHeuristic {
 	
 		gIn.displayGraphstream_0_4_2();
 		
+		
+		System.out.println("Running LB Algo");
+		
+		VCLowerBound LB = new VCLowerBound(g, components);
+		LB.run();
+		
+		
+		try {
+//			if(false)
+			System.in.read();
+//			int a =1;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		
+		
 		while(gIn.getVertices().size()>1) {
 			int[] toGroup = findCheapestLabelMerge();
 			int u = toGroup[0];
@@ -46,6 +64,22 @@ public class CWHeuristic {
 			}
 			executeLabelMerge(u, v);
 			System.out.println(components);
+			
+			System.out.println("Running LB Algo");
+			
+			LB = new VCLowerBound(g, components);
+			LB.run();
+			
+			
+			try {
+//				if(false)
+				System.in.read();
+//				int a =1;
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			
+			
 		}
 		
 		
@@ -55,16 +89,17 @@ public class CWHeuristic {
 	public void executeLabelMerge(int u, int v) {
 		IntSet reqV = getRequiredVertices(u,v);				
 		IntSet reqC = getRequiredComponents(reqV);
-		System.out.println("Required width: "+getRequiredWidth(reqC));
+		System.out.println("Required width: "+getRequiredWidth(u,v, reqV, reqC));
 		if(reqC.size() > 1) {
 			pTree.disjointMerge(reqC);
 			int[] toMergeComponents = reqC.toIntArray();
+			Arrays.sort(toMergeComponents);
 			for(int i=1; i<toMergeComponents.length;i++){
 				components.union(toMergeComponents[0], toMergeComponents[i]);
 			}		
 			
 		}
-		if(reqV.size() == 2 || reqC.size() == 1) {
+		if((reqV.size() == 2 && ( !g.areVerticesAdjacent(u, v)) ) || reqC.size() == 1) {
 			//can merge labels immediately after merging components because no required vertices 
 			//or components do not need to be merged 
 			pTree.labelMerge(u, v);
@@ -91,6 +126,7 @@ public class CWHeuristic {
 		g.removeVertex(v);
 		
 	}
+	
 	public int[] findCheapestLabelMerge() {
 		int cu = 0, cv = 0, minW = Integer.MAX_VALUE; 
 		int[] vertices = g.getVertices().toIntArray();
@@ -100,7 +136,7 @@ public class CWHeuristic {
 				int v = vertices[j];
 				IntSet reqV = getRequiredVertices(u,v);				
 				IntSet reqC = getRequiredComponents(reqV);
-				int w = getRequiredWidth(reqC) - (reqV.size()==2?1:0);
+				int w = getRequiredWidth(u, v, reqV, reqC); // - (reqC.size() == 1 || !(reqV.size()==2  && g.areVerticesAdjacent(u, v))   ?1:0);
 				if(w<minW) {
 					minW =w;
 					cu = u;
@@ -118,7 +154,7 @@ public class CWHeuristic {
 		IntSet nU = g.getNeighbours(u);
 		IntSet nV = g.getNeighbours(v);
 		reqVertices.addAll(IntSets.difference(IntSets.union(g.getNeighbours(u), g.getNeighbours(v)), IntSets.intersection(g.getNeighbours(u), g.getNeighbours(v)) ) );
-		
+						
 		return reqVertices;		
 	}
 	
@@ -130,13 +166,18 @@ public class CWHeuristic {
 		return reqComponents;
 	}
 	
-	private int getRequiredWidth(IntSet reqComponents) {
+	private int getRequiredWidth(int u, int v, IntSet reqVertices, IntSet reqComponents) {
 		int width =0;
 		for(int component : reqComponents.toIntArray()) {
 			width += components.size(component);
 		}
+		
+		width -= (reqComponents.size() == 1 || (reqVertices.size()==2  && !g.areVerticesAdjacent(u, v))   ?1:0);
+		
 		return width; 
 	}
+	
+	
 	
 	public static void main(String... args) {
 		Grph g = new InMemoryGrph();
@@ -144,9 +185,9 @@ public class CWHeuristic {
 		g.clique();
 		
 		g = PetersonGraph.petersenGraph(5, 2);
-		g = new Paley13Generator().paley13Generator();
-		g = new ChvatalGenerator().chvatalGenerator();
-		g = PetersonGraph.petersenGraph(20, 3);
+//		g = new Paley13Generator().paley13Generator();
+//		g = new ChvatalGenerator().chvatalGenerator();
+//		g = PetersonGraph.petersenGraph(20, 3);
 		for(int i : g.getVertices().toIntArray()) {
 			g.getVertexLabelProperty().setValue(i, ""+i);
 		}
