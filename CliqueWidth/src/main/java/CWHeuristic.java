@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Random;
 
 import toools.set.DefaultIntSet;
 import toools.set.IntSet;
@@ -16,6 +17,8 @@ public class CWHeuristic {
 	Grph g;
 	UFPartition<Integer> components;
 	PartitionTree pTree; 
+	
+	int maxW = 0; 
 	public CWHeuristic() {
 	}
 
@@ -35,8 +38,8 @@ public class CWHeuristic {
 		
 		System.out.println("Running LB Algo");
 		
-		VCLowerBound LB = new VCLowerBound(g, components);
-		LB.run();
+//		VCLowerBound LB = new VCLowerBound(g, components);
+//		LB.run();
 		
 		
 		try {
@@ -55,33 +58,36 @@ public class CWHeuristic {
 			int v = toGroup[1];
 			
 			System.out.println("Merging: "+u+"-"+v);
-			try {
+/*			try {
 //				if(false)
 				System.in.read();
 //				int a =1;
 			} catch (IOException e) {
 				e.printStackTrace();
-			}
+			}*/
 			executeLabelMerge(u, v);
-			System.out.println(components);
+//			System.out.println(components);
 			
-			System.out.println("Running LB Algo");
+//			System.out.println("Running LB Algo");
+//			
+//			LB = new VCLowerBound(g, components);
+//			LB.run();
+//			
+
 			
-			LB = new VCLowerBound(g, components);
-			LB.run();
-			
-			
-			try {
-//				if(false)
-				System.in.read();
-//				int a =1;
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+//			try {
+////				if(false)
+//				System.in.read();
+////				int a =1;
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
 			
 			
 		}
 		
+		
+		System.out.println("## Finished, cwd: "+this.maxW);
 		
 		return null;//TODO return
 	}
@@ -108,7 +114,16 @@ public class CWHeuristic {
 		}
 		g.getVertexLabelProperty().setValue(Math.min(u,v), g.getVertexLabelProperty().getValueAsString(Math.min(u,v))+","+g.getVertexLabelProperty().getValueAsString(Math.max(u,v)));
 //		g.removeEdge(u,v);;
+		
+		//Calculate edges that must be removed from completness neighbourhood
+		IntSet neighboursRemove = IntSets.difference(g.getNeighbours(Math.min(u, v)), g.getNeighbours(Math.max(u, v)));;
+		
+		
 		contractVertices(Math.min(u,v), Math.max(u,v));
+		for(int n:neighboursRemove.toIntArray()) {
+			g.removeEdge(Math.min(u,v), n);
+		}
+		//
 		components.remove(Math.max(u, v));
 		
 	}
@@ -145,6 +160,8 @@ public class CWHeuristic {
 			}
 				
 		}
+		
+		this.maxW = Math.max(minW, this.maxW);
 		return new int[] {cu, cv};
 	}
 	
@@ -188,12 +205,22 @@ public class CWHeuristic {
 //		g = new Paley13Generator().paley13Generator();
 //		g = new ChvatalGenerator().chvatalGenerator();
 //		g = PetersonGraph.petersenGraph(20, 3);
+		g = new DHGenerator(20, 0.2, 0.4).run();
+		
+		DHGenerator gen = new DHGenerator(100, 0.2, 0.4); 
+		
+		for(int ii=0; ii<5; ii++) {
+			gen.rnd = new Random(ii);
+		g = gen.run();
+			
 		for(int i : g.getVertices().toIntArray()) {
 			g.getVertexLabelProperty().setValue(i, ""+i);
 		}
 		
 		
 		new CWHeuristic().run(g);
+		
+		}
 	}
 	
 }

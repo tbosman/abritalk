@@ -143,7 +143,9 @@ public class VCLowerBound {
 				int u = vertices[i];
 				int v = vertices[j];
 				if(minList.contains(u) && minList.contains(v)){
+					if(minPairs.areAdjacent(u, v)) {
 					continue;
+					}
 				}
 				IntSet reqV = IntSets.difference(getRequiredVertices(u,v), cover);				
 //				reqV.removeAll(cover);				

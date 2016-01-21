@@ -101,7 +101,10 @@ public class UFPartition<T> {
 		return null; 
 	}
 	
-	public void union(T e1, T e2){		
+	public void union(T e1, T e2){	
+		if(getNode(e1).getRoot() == getNode(e2).getRoot()) {
+			return;
+		}
 		Node<T> b1 = getNode(e1); 
 		getNode(e2).getRoot().setParent(b1);			
 	}
@@ -211,6 +214,15 @@ public class UFPartition<T> {
 		
 		return mathString;
 	}
+	
+	public ArrayList<T> getRoots() {
+		HashSet<T> roots = new HashSet<T>();
+		for(T node : nodes.keySet()) {
+			roots.add(find(node));
+		}
+		return new ArrayList<T>(roots);
+	}
+	
 	public Collection<T> values(){
 //		ArrayList<T> v
 //		return nodes.values();
