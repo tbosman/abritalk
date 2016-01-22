@@ -137,8 +137,24 @@ public class CWHeuristic2 {
 			int minU=-1;
 			int minV=-1;
 
+			//
+			int mainCompSize = 0;
+			int mainComp=0;
+			for(int c : components.getRoots()) {
+
+				if(K[c] > mainCompSize) {
+					mainCompSize = K[c];
+					mainComp = c;
+				}
+			}
+			
 			Integer[] groupHeads = groups.getRoots().toArray(new Integer[1]);
 			for(int ii=0;ii<groupHeads.length-1;ii++) {
+				
+				if(K[components.find(groupHeads[ii])] != mainCompSize) {
+					continue;
+				}
+				
 				for(int iii=ii+1; iii<groupHeads.length;iii++) {
 					int u = groupHeads[ii];
 					int v = groupHeads[iii];
@@ -411,8 +427,10 @@ public class CWHeuristic2 {
 //			g = new Paley13Generator().paley13Generator();
 //			g = new ChvatalGenerator().chvatalGenerator();
 		//	g = PetersonGraph.petersenGraph(20, 3);
+		new CWHeuristic2().run(g);
+
 		g = new InMemoryGrph();
-		int n=4;
+		int n=10;
 		GridTopologyGenerator gt = new GridTopologyGenerator();
 		gt.setWidth(n);
 		gt.setHeight(n);
@@ -422,10 +440,9 @@ public class CWHeuristic2 {
 			}
 			g.display();
 			
-		new CWHeuristic2().run(g);
 		g = new DHGenerator(150, 0.2, 0.4).run();
 
-		DHGenerator gen = new DHGenerator(80, 0.2, 0.4); 
+		DHGenerator gen = new DHGenerator(150, 0.2, 0.4); 
 
 		for(int ii=0; ii<1; ii++) {
 			gen.rnd = new Random(ii);
