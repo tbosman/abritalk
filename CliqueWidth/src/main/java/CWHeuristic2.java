@@ -412,17 +412,19 @@ public class CWHeuristic2 {
 //			g = new ChvatalGenerator().chvatalGenerator();
 		//	g = PetersonGraph.petersenGraph(20, 3);
 		g = new InMemoryGrph();
-		int n=4;
+		int n=15;
 		GridTopologyGenerator gt = new GridTopologyGenerator();
 		gt.setWidth(n);
 		gt.setHeight(n);
 		gt.compute(g);
+		
+		g = new MCGeeGenerator().run();
 			for(int i : g.getVertices().toIntArray()) {
 				g.getVertexLabelProperty().setValue(i, ""+i);
 			}
 			g.display();
-			
-		new CWHeuristic2().run(g);
+			new CWHeuristic2().run(g);
+	
 		g = new DHGenerator(150, 0.2, 0.4).run();
 
 		DHGenerator gen = new DHGenerator(80, 0.2, 0.4); 
@@ -437,7 +439,7 @@ public class CWHeuristic2 {
 			
 			g.display();
 
-			
+
 		}
 
 
