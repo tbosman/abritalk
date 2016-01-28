@@ -28,9 +28,11 @@ public class CWHeuristic2 {
 	PartitionTree pTree; 
 
 	int cwdUB = 0;
+	private Grph gOld;
 
 	public void init(Grph gIn) {
 		g = gIn;
+		gOld = g.clone();
 		components = new UFPartition<Integer>();
 		components.makeSets(g.getVertices().toIntegerArrayList());
 
@@ -105,9 +107,37 @@ public class CWHeuristic2 {
 		return grps;
 	}
 	
+	public int calcNumAtoms(IntSet X, Grph g){
+		
+		
+		int[] verticesX = X.toIntArray();
+		IntSet Y = IntSets.difference(g.getVertices(), X);
+		
+
+		int atoms = X.size();
+		for(int i=0; i< verticesX.length-1;i++){
+			int u = verticesX[i];
+			for(int j=i+1; j<verticesX.length;j++){
+				int v = verticesX[j];
+				if(IntSets.difference(g.getNeighbours(u), X).equals(IntSets.difference(g.getNeighbours(v), X))  ){
+					atoms--;
+					
+					break; 
+				}
+			}
+		}
+		
+		System.out.println("Complement groups: "+atoms+"\t size"+X.size());
+		
+		return atoms; 
+	}
+	
+	
 	public void run(Grph g) {
 		init(g);
 		int numRuns = g.getVertices().size();
+		int widthCO = 3;
+		boolean doLinear = true; 
 		for(int i=0; i<numRuns-1;i++) {
 			
 			// Fix pendants 
@@ -137,8 +167,28 @@ public class CWHeuristic2 {
 			int minU=-1;
 			int minV=-1;
 
+			//
+			int mainCompSize = 0;
+			int mainComp=0;
+			for(int c : components.getRoots()) {
+
+				if(K[c] > mainCompSize) {
+					mainCompSize = K[c];
+					mainComp = c;
+				}
+			}
+			
+			
+			
 			Integer[] groupHeads = groups.getRoots().toArray(new Integer[1]);
 			for(int ii=0;ii<groupHeads.length-1;ii++) {
+				
+				if(K[components.find(groupHeads[ii])] != mainCompSize) {
+					if(doLinear){
+						continue;
+					}
+				}
+				
 				for(int iii=ii+1; iii<groupHeads.length;iii++) {
 					int u = groupHeads[ii];
 					int v = groupHeads[iii];
@@ -231,11 +281,25 @@ public class CWHeuristic2 {
 					}
 
 				}
+				
+
 			}
 
-
+			if(minWidth > widthCO){//check other 'cores' before increasing width in next step
+				if(doLinear){
+					doLinear = false;						
+					
+				}else{
+					widthCO++;
+					doLinear = true;
+				}
+				i--;
+				continue;
+			}
 
 			{
+				
+				doLinear = true;
 				if(minWidth >3) {
 					int a=1;
 					for(int gr: gPartition.getRoots()) {
@@ -343,6 +407,17 @@ public class CWHeuristic2 {
 				contractVertices(u,v);
 				
 				checkContraction(u, v);
+				
+				IntSet cComp = new DefaultIntSet(); 
+				for(int r : components.getRoots()){
+					if(r == components.find(u)){
+						continue;
+					}
+					for(int n : components.getBlock(r)){
+						cComp.add(n);
+					}
+				}
+				calcNumAtoms(cComp, gOld);
 			}
 		}
 		
@@ -408,9 +483,11 @@ public class CWHeuristic2 {
 		g = PetersonGraph.petersenGraph(5, 2);
 		
 		
-//			g = new Paley13Generator().paley13Generator();
+			g = new Paley13Generator().paley13Generator();
 //			g = new ChvatalGenerator().chvatalGenerator();
 		//	g = PetersonGraph.petersenGraph(20, 3);
+		new CWHeuristic2().run(g);
+
 		g = new InMemoryGrph();
 		int n=15;
 		GridTopologyGenerator gt = new GridTopologyGenerator();
@@ -427,7 +504,7 @@ public class CWHeuristic2 {
 	
 		g = new DHGenerator(150, 0.2, 0.4).run();
 
-		DHGenerator gen = new DHGenerator(80, 0.2, 0.4); 
+		DHGenerator gen = new DHGenerator(150, 0.2, 0.4); 
 
 		for(int ii=0; ii<1; ii++) {
 			gen.rnd = new Random(ii);
@@ -438,6 +515,7 @@ public class CWHeuristic2 {
 			}
 			
 			g.display();
+			new CWHeuristic2().run(g);
 
 
 		}
