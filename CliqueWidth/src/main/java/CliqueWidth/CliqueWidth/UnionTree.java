@@ -1,24 +1,36 @@
 package CliqueWidth.CliqueWidth;
 
+import grph.Grph;
+import grph.in_memory.InMemoryGrph;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Stack;
 
+import CliqueWidth.CliqueWidth.UnionTree.NodeType;
 import toools.set.DefaultIntSet;
 import toools.set.IntSet;
 
 public class UnionTree {
 
 	private int idCounter = -1; 
-	private HashMap<Integer, Node> leafs;	
+	private HashMap<Integer, Node> leafs = new HashMap<Integer, Node>();	
 	
-	private enum NodeType {LEAF, INNER};
-	private class Node{
+	public enum NodeType {LEAF, INNER};
+	public class Node{
 		private Node parent; 
 		NodeType type; 
 		final int id; 
 		
+		
+		
+		private HashSet<Node> children = new HashSet<Node>(); 
+		
+		public HashSet<Node> getChildren() {
+			return children;
+		}
+
 		Node(int id){
 			this.id = id;
 			this.parent = this;
@@ -35,12 +47,75 @@ public class UnionTree {
 		}
 
 		public void setParent(Node parent) {
+			if(this.parent!=this) {
+				this.parent.children.remove(this);
+			}
 			this.parent = parent;
+			parent.children.add(this);
 		}	
 		
+		public boolean isAncestor(Node node) {
+			if(node == this) {
+				return true;
+			}else if(this.parent == this) {
+				return false; 
+			}else {
+				return this.parent.isAncestor(node);
+			}
+		}
+
+		public NodeType getType() {
+			return this.type;
+		}
+
+		public int getId() {
+			return id;
+		}
+
+		public Node getRoot() {
+			if(this.parent == this) {
+				return this;
+			}else {
+				return this.parent.getRoot();
+			}
+			
+		}
+		
+	}
+		
+	
+	public ArrayList<Node> getInnerNodes(){
+		HashSet<Node> activeInnerNodes = new HashSet<Node>();
+		HashSet<Node> innerNodes = new HashSet<Node>();
+		for(Node lNode : this.leafs.values()) {
+			activeInnerNodes.add(lNode.parent);			
+			innerNodes.add(lNode.parent);
+		}
+		
+		while(activeInnerNodes.size()>0) {
+			HashSet<Node> newNodes = new HashSet<Node>();
+			for(Node n : activeInnerNodes) {
+				if(!innerNodes.contains(n.getParent()) ) {
+					newNodes.add(n.getParent());
+					innerNodes.add(n.getParent());
+				}
+				
+			}
+			activeInnerNodes = newNodes;
+		}
+		return new ArrayList<Node>(innerNodes);
 	}
 	
 	
+	public IntSet getLeavesInSubtree(Node node) {
+		IntSet leafSet = new DefaultIntSet(); 
+		for(Node lNode : this.leafs.values()) {
+			if(lNode.isAncestor(node)) {
+				leafSet.add(lNode.id);
+			}
+		}
+		return leafSet;
+	}
 	
 	
 	
@@ -57,6 +132,7 @@ public class UnionTree {
 	
 	private Stack<Node> parentStack(Node node){
 		Stack<Node> parentStack =  new Stack<Node>();
+		parentStack.push(node);
 		Node cnode = node; 
 		while(cnode.parent != cnode){
 			cnode = cnode.parent; 
@@ -71,6 +147,9 @@ public class UnionTree {
 	
 	//create new child below lowest common ancestor of leafs and attach subtrees containing leafs to it 
 	public void makeCommonAncestor(IntSet leafs){
+		if(leafs.size()==1) {
+			return;
+		}
 		ArrayList<Stack<Node>> parentStacks = new ArrayList<Stack<Node>>(); 
 	
 		for(int v : leafs.toIntArray()){
@@ -85,10 +164,11 @@ public class UnionTree {
 			for(Stack<Node> pStack : parentStacks){
 				subRoots.add(pStack.pop());				
 			}
-			if(subRoots.size()>1){
-				leastCANotFound = false;
-			}else{
+			if(subRoots.size()==1){
+				leastCANotFound = true;
 				oldCA = subRoots.iterator().next();
+			}else{				
+				leastCANotFound = false;
 			}			
 		}
 		
@@ -105,4 +185,27 @@ public class UnionTree {
 		
 	}
 	
+	public Grph toGrph() {
+		Grph g = new InMemoryGrph();
+		for(int v : leafs.keySet()) {
+			g.addVertex(v);
+			g.getVertexColorProperty().setValue(v,2);
+		}
+		
+		Node root = leafs.values().iterator().next().getRoot();	
+		addChildrenToGrph(root, g);
+		return g;
+	}
+	
+	private void addChildrenToGrph(Node node, Grph g) {
+		if(!g.containsVertex(node.getId()));
+		HashSet<Node> children = node.getChildren();
+		for(Node cNode : children) {
+			if(!g.containsVertex(cNode.getId())) {
+				g.addVertex(cNode.getId());
+			}
+			g.addDirectedSimpleEdge(node.getId(), cNode.getId());
+			addChildrenToGrph(cNode, g);
+		}
+	}
 }
