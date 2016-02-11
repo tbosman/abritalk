@@ -1,4 +1,6 @@
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 
@@ -337,7 +339,9 @@ public class GreedySplit {
 
 	public IntSet getAtomHeads(IntSet X, Grph g) {
 		IntSet atomHeads = new DefaultIntSet();
-		for(int u : X.toIntArray()) {
+		int[] Xarr = X.toIntArray();
+		Arrays.sort(Xarr);
+		for(int u : Xarr) {
 			boolean isAtomHead = true; 
 			for(int v : X.toIntArray()) {
 				if(v <= u) {
