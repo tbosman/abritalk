@@ -357,6 +357,55 @@ public class GreedySplit {
 		return atomHeads;
 	}
 	
+	public boolean pathPropertyBlocks(int v1, int v2, int v3, int v4, Grph g) {
+		
+		boolean block = true; 
+		
+		block = block && g.areVerticesAdjacent(v1, v3);
+		block = block && g.areVerticesAdjacent(v1, v4);
+		block = block && (g.areVerticesAdjacent(v2, v3) ^ g.areVerticesAdjacent(v2, v4));
+		if(block) {
+			return true;
+		}
+		
+		block = block && g.areVerticesAdjacent(v2, v3);
+		block = block && g.areVerticesAdjacent(v2, v4);
+		block = block && (g.areVerticesAdjacent(v1, v3) ^ g.areVerticesAdjacent(v1, v4));
+		if(block) {
+			return true;
+		}
+		return false;		
+		
+	}
+	public int getCWDSplitWidth(IntSet X1, IntSet X2, Grph g) {
+		IntSet atomHeadsOne = getAtomHeads(X1,g);
+		IntSet atomHeadsOther = getAtomHeads(X2, g );
+		IntSet X = IntSets.union(X1, X2);
+		int width = atomHeadsOne.size()+atomHeadsOther.size();
+		
+		HashSet<IntSet> contractedPairs = new HashSet<IntSet>();
+		for(int u : atomHeadsOne.toIntArray()) {			 
+			for(int v : atomHeadsOther.toIntArray() ) {
+				if(!g.areVerticesAdjacent(u, v) && IntSets.difference(g.getNeighbours(u), X).equals(IntSets.difference(g.getNeighbours(v), X)) ) {
+					boolean blocked = false;
+					for(IntSet pair: contractedPairs) {
+						if(pathPropertyBlocks(u, v, pair.toIntArray()[0], pair.toIntArray()[1],g)) {
+							blocked =true;
+							break;
+						}
+					}
+					if(!blocked) {
+						width--; 
+						atomHeadsOther.remove(v);
+						contractedPairs.add(IntSets.from(u,v));
+						break;
+					}
+				}
+			}
+		}
+		return width;
+	}
+	
 	public int getSplitWidth(IntSet X1, IntSet X2, Grph g) {
 		IntSet atomHeadsOne = getAtomHeads(X1,g);
 		IntSet atomHeadsOther = getAtomHeads(X2, g );
@@ -373,7 +422,26 @@ public class GreedySplit {
 		}
 		return width;
 	}
-
+	public int getCWDNodeWidth(UnionTree kTree, Node iNode, Grph g) {
+		HashSet<Node> cNodes  = iNode.getChildren();
+		
+		if(cNodes.size()>2) {
+			int w = 0; 
+			for(Node cNode : cNodes) {
+				w += getSubsetWidth(kTree.getLeavesInSubtree(cNode), g);
+			}
+			return w;
+		}
+		
+		IntSet X = kTree.getLeavesInSubtree(iNode);
+		
+		Iterator<Node> cIterator = cNodes.iterator(); 
+		Node cNode1 = cIterator.next();
+		Node cNode2 = cIterator.next();
+		IntSet X1 = kTree.getLeavesInSubtree(cNode1);
+		IntSet X2 = kTree.getLeavesInSubtree(cNode2);
+		return getCWDSplitWidth(X1, X2, g);
+	}
 	public int getNodeWidth(UnionTree kTree, Node iNode, Grph g) {
 		HashSet<Node> cNodes  = iNode.getChildren();
 		
@@ -420,26 +488,39 @@ public class GreedySplit {
 		}
 		return width;
 	}
+	public int getCWDTreeWidth(UnionTree kTree, Grph g) {
+		int width = 0; 
+
+		for(Node iNode : kTree.getInnerNodes()) {			
+//			int nWidth = getSubsetWidth(kTree.getLeavesInSubtree(iNode), g);
+			int nWidth = getCWDNodeWidth(kTree, iNode,g);
+			width = Math.max(width, nWidth);
+		}
+		return width;
+	}
+	
 
 	public static void main(String... args){
 		Grph g = new MCGeeGenerator().run();
 		g = new Paley13Generator().paley13Generator();
 //		g = new ChvatalGenerator().chvatalGenerator();
-		DHGenerator DHG = new DHGenerator(150, 0.2,0.4);
-				g = DHG.run();
+		DHGenerator DHG = new DHGenerator(50, 0.2,0.4);
+//				g = DHG.run();
 
 
 //		g = new InMemoryGrph();
-		int n=15;
+		int n=10;
 		GridTopologyGenerator gt = new GridTopologyGenerator();
 		gt.setWidth(n);
 		gt.setHeight(n);
+//		g.clear();
 //		gt.compute(g);
 		GreedySplit GS = new GreedySplit();
 		ArrayList<IntSet> splits = GS.calculateSplits(g.getVertices(), g);
 		UnionTree kTree = GS.createUTreeFromSplits(splits, g);
 		GS.finishKTreeSplits(kTree, g);
-		System.out.println("Done, final width: "+GS.getKTreeWidth(kTree, g) );
+		System.out.println("Done, final NLC-width: "+GS.getKTreeWidth(kTree, g) );
+		System.out.println("Done, final Clique-width: "+GS.getCWDTreeWidth(kTree, g) );
 		Grph kTGraph = kTree.toGrph();
 		kTGraph.display();
 		g.display();
