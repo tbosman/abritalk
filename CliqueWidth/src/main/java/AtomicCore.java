@@ -90,7 +90,7 @@ public class AtomicCore {
 		return result;
 	}
 
-	public long intsetToLong(IntSet X){
+	public static long intsetToLong(IntSet X){
 		if(X.size()>60){
 			throw new Error("Set is to big"); 
 		}
@@ -101,7 +101,7 @@ public class AtomicCore {
 		return string; 
 	}
 
-	public int intsetToInt(IntSet X){
+	public static int intsetToInt(IntSet X){
 		if(X.size()>60){
 			throw new Error("Set is to big"); 
 		}
