@@ -40,6 +40,10 @@ public class AtomicCore {
 		public IntSet next() {
 			return longToIntSet(cString++);			
 		}
+		public void remove() {
+			// TODO Auto-generated method stub
+			
+		}
 
 	}
 	public IntSet getAtomicCore(IntSet X, Grph g){
@@ -196,7 +200,7 @@ public class AtomicCore {
 
 
 
-	public void start(Grph g){
+	public int start(Grph g){
 		int[] acPerSize = new int[g.getVertices().size()+1];
 		long numAC = 0;
 		long numTot = 0; 
@@ -218,6 +222,7 @@ public class AtomicCore {
 		for(int i=0; i<= g.getVertices().size(); i++){
 			System.out.println("|X|="+i+"\t "+ acPerSize[i]+"/ "+nCr(g.getVertices().size(), i));
 		}
+		return (int) numAC;
 	}
 	public static void main(String... args){
 
@@ -227,7 +232,7 @@ public class AtomicCore {
 		g = new Paley13Generator().paley13Generator();
 		//		g = new MCGeeGenerator().run();
 
-		g = new DHGenerator(15, 0.2, 0.4).run();
+//		g = new DHGenerator(15, 0.2, 0.4).run();
 		//		
 		//
 		//		GridTopologyGenerator gt = new GridTopologyGenerator(); 
@@ -240,18 +245,41 @@ public class AtomicCore {
 		//		gt.compute(g);
 
 		
-		g = new RandomGraphGenerator(15, 0.85, 2).compute();
+		
+//		int maxSize = 15;
+//		int runs =10; 
+//		double[] avReduction = new double[maxSize+1];
+//		for(int n=1;n<maxSize+1;n++) {
+//			for(int i=0; i<runs;i++) {
+//				g = new RandomGraphGenerator(n, 0.75, i).compute();
+////				DHGenerator dhg = new DHGenerator(n, 0.2, 0.4);
+////				dhg.rnd.setSeed(i);
+////				g = dhg.run();
+//				
+//
+//				avReduction[n] += new AtomicCore().start(g);
+//			}
+//			avReduction[n] /= runs;
+//			avReduction[n] /= Math.pow(2,n);
+//		}
+//		
+//		System.out.println("Final results");
+//		for(int i=1; i<maxSize+1;i++) {
+//			System.out.println(i+" & "+avReduction[i]+"\\\\");			
+//		}
+		
 
-		System.out.println(g);
-
+//		System.out.println(g);
+//
 		new AtomicCore().start(g);
-		new AtomicCore().calcAtomicCore(g);
-
-
-
-
-		System.out.println(""+(1L << 2));
-		g.display();
+		
+//		new AtomicCore().calcAtomicCore(g);
+//
+//
+//
+//
+//		System.out.println(""+(1L << 2));
+//		g.display();
 	}
 
 }

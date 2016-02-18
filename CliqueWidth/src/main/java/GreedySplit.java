@@ -1,21 +1,38 @@
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 
+
+
+
+
+
+
 import CliqueWidth.CliqueWidth.UnionTree;
 import CliqueWidth.CliqueWidth.UnionTree.Node;
 import CliqueWidth.CliqueWidth.UnionTree.NodeType;
 import grph.Grph;
+import grph.VertexPair;
 import grph.algo.topology.GridTopologyGenerator;
+import grph.algo.topology.PetersonGraph;
 import grph.in_memory.InMemoryGrph;
+import grph.io.DimacsReader;
+import grph.io.GraphBuildException;
+import grph.io.ParseException;
+import toools.io.file.RegularFile;
 import toools.set.DefaultIntSet;
 import toools.set.IntSet;
 import toools.set.IntSets;
 
 public class GreedySplit {
 
+
+
+	private boolean doCWD =true;
 
 
 	private ArrayList<IntSet> calculateSplits(IntSet X, Grph g){
@@ -168,6 +185,10 @@ public class GreedySplit {
 			return Integer.MAX_VALUE;
 		}
 		X = IntSets.difference(X, currentComponent); 
+		if(doCWD) {
+			return getCWDSplitWidth(currentComponent, X, g);
+		}
+		
 		return getSplitWidth(currentComponent, X, g);
 	}
 	/*
@@ -388,9 +409,15 @@ public class GreedySplit {
 		int width = atomHeadsOne.size()+atomHeadsOther.size();
 		
 		HashSet<IntSet> contractedPairs = new HashSet<IntSet>();
-		for(int u : atomHeadsOne.toIntArray()) {			 
+		for(int u : atomHeadsOne.toIntArray()) {
+			if(IntSets.union(g.getNeighbours(u), X2).size() > 0) {
+				continue;
+			}
 			for(int v : atomHeadsOther.toIntArray() ) {
-				if(!g.areVerticesAdjacent(u, v) && IntSets.difference(g.getNeighbours(u), X).equals(IntSets.difference(g.getNeighbours(v), X)) ) {
+				if(IntSets.union(g.getNeighbours(v), X1).size() > 0) {
+					continue;
+				}
+				if(IntSets.difference(g.getNeighbours(u), X).equals(IntSets.difference(g.getNeighbours(v), X)) ) {
 					boolean blocked = false;
 					for(IntSet pair: contractedPairs) {
 						if(pathPropertyBlocks(u, v, pair.toIntArray()[0], pair.toIntArray()[1],g)) {
@@ -504,14 +531,34 @@ public class GreedySplit {
 	}
 	
 
-	public static void main(String... args){
-		Grph g = new MCGeeGenerator().run();
-		g = new Paley13Generator().paley13Generator();
+	public static void main(String... args) throws ParseException, IOException, GraphBuildException{
+		Grph g;
+		g = new MCGeeGenerator().run();
+//		g = new Paley13Generator().paley13Generator();
 //		g = new ChvatalGenerator().chvatalGenerator();
+//		g = PetersonGraph.petersenGraph(5, 2);
+		
+//		g = new FlowerSnarkGenerator().run(5);
+		
+//		g = new FranklinGraph().run();
+		
 		DHGenerator DHG = new DHGenerator(50, 0.2,0.4);
 //				g = DHG.run();
 
-
+		
+		g = new DimacsReader().readGraph(new RegularFile("graphs/queen8_12.col"));
+		if(!g.containsVertex(0) && g.containsVertex(1)) {//vertex indexing starting at 1, relabel max vertex to 0
+			int maxV = g.getVertices().getGreatest();
+			g.addVertex(0);
+			IntSet mNeighbours = g.getNeighbours(maxV);
+			for(int n: mNeighbours.toIntArray()) {
+				g.addUndirectedSimpleEdge(0, n);
+			}
+			g.removeEdge(maxV);
+		}
+		
+		
+		
 //		g = new InMemoryGrph();
 		int n=10;
 		GridTopologyGenerator gt = new GridTopologyGenerator();
@@ -520,6 +567,7 @@ public class GreedySplit {
 //		g.clear();
 //		gt.compute(g);
 		GreedySplit GS = new GreedySplit();
+		GS.doCWD = false;
 		ArrayList<IntSet> splits = GS.calculateSplits(g.getVertices(), g);
 		UnionTree kTree = GS.createUTreeFromSplits(splits, g);
 		GS.finishKTreeSplits(kTree, g);
