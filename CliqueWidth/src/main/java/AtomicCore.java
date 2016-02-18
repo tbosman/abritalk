@@ -14,39 +14,7 @@ import toools.set.IntSets;
 public class AtomicCore {
 
 
-	/**
-	 * Iterator over subsets of {1,...,n}
-	 */
-	private class powerSetIterator implements Iterator<IntSet>{
-		final int maxIdx;
-		int cString = 0; 
-		powerSetIterator(int n){
-			maxIdx = n-1; 
-		}
-		public boolean hasNext() {
-			return cString < 1L << maxIdx+1;
-		}
-
-		private IntSet longToIntSet(long x){
-
-			IntSet set = new DefaultIntSet();
-			for (int i = maxIdx; i >= 0; i--) {
-				if((x & (1L << i)) != 0){
-					set.add(i);
-				}
-			}
-			return set;
-		}
-		public IntSet next() {
-			return longToIntSet(cString++);			
-		}
-		public void remove() {
-			// TODO Auto-generated method stub
-			
-		}
-
-	}
-	public IntSet getAtomicCore(IntSet X, Grph g){
+	public static IntSet getAtomicCore(IntSet X, Grph g){
 		IntSet Xcopy = X.clone();
 		int[] XArr = Xcopy.toIntArray(); 
 		Arrays.sort(XArr);
@@ -73,13 +41,13 @@ public class AtomicCore {
 		return atomicCore;		
 	}
 
-	public boolean isAtomicCore(IntSet X, Grph g){
+	public static  boolean isAtomicCore(IntSet X, Grph g){
 		return getAtomicCore(X,g).equals(X);
 	}
 
 
 	public Iterator<IntSet> powerSetIterator(int n){
-		return new powerSetIterator(n);
+		return new PowerSetIterator(n);		
 	}
 
 	public int nCr(int n, int r){
@@ -92,39 +60,6 @@ public class AtomicCore {
 			result /= i; 
 		}
 		return result;
-	}
-
-	public static long intsetToLong(IntSet X){
-		if(X.size()>60){
-			throw new Error("Set is to big"); 
-		}
-		long string = 0L; 
-		for(int i : X.toIntArray()){
-			string = string | 1L << i;
-		}
-		return string; 
-	}
-
-	public static int intsetToInt(IntSet X){
-		if(X.size()>60){
-			throw new Error("Set is to big"); 
-		}
-		int string = 0; 
-		for(int i : X.toIntArray()){
-			string = string | 1 << i;
-		}
-		return string; 
-	}
-
-	private IntSet intToIntSet(int x){
-
-		IntSet set = new DefaultIntSet();
-		for (int i = 31; i >= 0; i--) {
-			if((x & (1L << i)) != 0){
-				set.add(i);
-			}
-		}
-		return set;
 	}
 
 	public IntSet merge(IntSet X, int u, int v, Grph g){
@@ -153,9 +88,9 @@ public class AtomicCore {
 				X.addAll(IntSets.difference(g.getNeighbours(v), g.getNeighbours(u)));
 				X.addAll(u,v);
 				if(isAtomicCore(X, g)){
-					newStringSet.add(intsetToInt(X));
+					newStringSet.add(IntStringTools.intsetToInt(X));
 				}
-				System.out.println("X: "+X+"-"+intToIntSet(intsetToInt(X))) ;
+				System.out.println("X: "+X+"-"+IntStringTools.intToIntSet(IntStringTools.intsetToInt(X))) ;
 
 			}
 		}
@@ -165,7 +100,7 @@ public class AtomicCore {
 			int string = newStringSet.toIntArray()[0];
 			newStringSet.remove(string);
 			setStringSet.add(string);
-			IntSet X = intToIntSet(string);
+			IntSet X = IntStringTools.intToIntSet(string);
 //			System.out.println("routine 2, X: "+X);//#DBG
 			IntSet atoms = AtomTools.atomHeads(X,g);
 			int[] mergeCandidates = IntSets.union(atoms, IntSets.difference(g.getVertices(), X)).toIntArray() ;
@@ -176,9 +111,9 @@ public class AtomicCore {
 						continue;
 					}
 					IntSet newX = merge(X,u,v, g);
-					if(!setStringSet.contains(intsetToInt(newX))){
+					if(!setStringSet.contains(IntStringTools.intsetToInt(newX))){
 						
-						newStringSet.add(intsetToInt(newX));
+						newStringSet.add(IntStringTools.intsetToInt(newX));
 					}	
 					
 //					if(isAtomicCore(newX, g)){
@@ -205,7 +140,7 @@ public class AtomicCore {
 		long numAC = 0;
 		long numTot = 0; 
 		int n = g.getVertices().size();
-		powerSetIterator it = new powerSetIterator(n);
+		PowerSetIterator it = new PowerSetIterator(n);
 		while(it.hasNext()){
 			numTot++;
 			IntSet X = it.next();
