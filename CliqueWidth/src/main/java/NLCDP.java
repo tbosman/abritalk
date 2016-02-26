@@ -119,7 +119,7 @@ public class NLCDP {
 					width = Math.max(width, w2);
 					if(width < widths.get(curSetString)){
 						if(width<32 && curSet.size()>9){
-							System.out.println("Set: "+curSet+"width: "+width);
+							System.out.println("Set: "+curSet+"\t width: "+width+"\t Best LB-UB: "+this.LB+"-"+this.UB);
 
 						}
 						widths.set(curSetString, width);
