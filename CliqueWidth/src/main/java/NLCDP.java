@@ -11,10 +11,10 @@ public class NLCDP {
 	
 	
 	private Grph g;
-	private int UB;
-	private boolean isUBSet;
-	private int LB;
-	private boolean isLBSet;
+	private int UB = Integer.MAX_VALUE;
+	private boolean isUBSet =true;
+	private int LB = 0;
+	private boolean isLBSet = true;
 	
 	
 
@@ -55,8 +55,13 @@ public class NLCDP {
 		for(int i=from; i<to; i++){
 			minWidth = Math.min(minWidth, minWidthsPerCardinality[i]);
 		}
+		if(minWidth == Integer.MAX_VALUE){
+			minWidth = from; 
+		}
 		return minWidth;
 	}
+	
+	
 	public void start(){
 		PowerSetIterator subsetIterator = new PowerSetIterator(g.getVertices().size());
 		
@@ -67,10 +72,14 @@ public class NLCDP {
 		for(int i=3;i<minWidthPerCardinality.length;i++){minWidthPerCardinality[i] = Integer.MAX_VALUE;};
 		
 		int largestSetSeen = 0; //cardinality sets of current iteration of DP
+		GreedySplit GS = new GreedySplit(); 
 		
 		while(subsetIterator.hasNext()){			
 			
-			
+			if(this.UB<= this.LB) {
+				widths.set(IntStringTools.intsetToInt(g.getVertices()), this.UB);
+				break;
+			}
 			
 			IntSet curSet = subsetIterator.next();
 			int curSetString = IntStringTools.intsetToInt(curSet);
@@ -92,11 +101,17 @@ public class NLCDP {
 			if(curSet.size() < 2){
 				widths.set(curSetString,curSet.size());				
 			}else 	if(!AtomicCore.isAtomicCore(curSet, g)){
-				continue;
+				//do nothing; 
+				int coreString = IntStringTools.intsetToInt(AtomicCore.getAtomicCore(curSet, g));
+				IntSet atoms = AtomTools.atomHeads(curSet, g);
+				int width = Math.max(widths.get(coreString), atoms.size());
+				if(width < minWidthPerCardinality[curSet.size()]){
+					minWidthPerCardinality[curSet.size()] = width;
+				}
 			}else{
 				widths.setMax(curSetString);
-				if(isUBSet){
-					int curSetLB = AtomTools.atomHeads(curSet, g).size();
+				int curSetLB = AtomTools.atomHeads(curSet, g).size();
+				if(isUBSet){					
 					if(curSetLB > this.UB){
 						continue;
 					}
@@ -110,34 +125,79 @@ public class NLCDP {
 						System.out.println("this shouldnt happen");
 					}
 					IntSet subsubSetCompl = IntSets.difference(curSet, subsubSet);
+					IntSet subsubSetCore =AtomicCore.getAtomicCore(subsubSet,g);
+					IntSet subsubSetComplCore =AtomicCore.getAtomicCore(subsubSetCompl,g); 
+					
+					int w1 = widths.get(IntStringTools.intsetToInt(subsubSetCore));
+					int w2 = widths.get(IntStringTools.intsetToInt(subsubSetComplCore));
+					if(isUBSet){					
+						if(w1 > this.UB || w2 > this.UB){
+							continue;
+						}
+					}
+					
 					int mu = new GreedySplit().getSplitWidth(subsubSet,  subsubSetCompl, g);
-					int w1 = widths.get(IntStringTools.intsetToInt(AtomicCore.getAtomicCore(subsubSet,g)));
-					int w2 = widths.get(IntStringTools.intsetToInt(AtomicCore.getAtomicCore(subsubSetCompl,g)));
+					/*int mu = GS.getSplitWidth(subsubSetCore, subsubSetComplCore,g);
+					mu += curSet.size() - subsubSetCore.size() - subsubSetComplCore.size();
+					if(mu != GS.getSplitWidth(subsubSet, subsubSetCompl, g)){
+						System.out.println("oh-oh");
+					}*/
 //					int w1 = widths.get(IntStringTools.intsetToInt(subsubSet));
 //					int w2 = widths.get(IntStringTools.intsetToInt(subsubSetCompl));
 					int width = Math.max(mu, w1);
 					width = Math.max(width, w2);
 					if(width < widths.get(curSetString)){
+						if(widths.get(curSetString) < minWidthPerCardinality[curSet.size()]){
+							minWidthPerCardinality[curSet.size()] = widths.get(curSetString);
+						}
 						if(width<32 && curSet.size()>9){
-							System.out.println("Set: "+curSet+"\t width: "+width+"\t Best LB-UB: "+this.LB+"-"+this.UB);
+
+							System.out.println("Set: "+curSet+"\t width: "+width+"\t Best LB-UB: "+this.LB+"-"+this.UB+"\t Set size:"+curSet.size());
+
 
 						}
 						widths.set(curSetString, width);
+						if(width <= curSetLB) {
+							continue;
+						}
 						if(isLBSet){
 							if(width <= this.LB){
 								continue;
-							}
-							
+							}							
 						}
 					}
 					
 				}
+				
+				
+				
+				if(curSet.size()>=g.getVertices().size()/2.0) {
+					IntSet curSetCompl = IntSets.difference(g.getVertices(), curSet);
+					
+					int curSetComplString = IntStringTools.intsetToInt(curSetCompl);
+					if(AtomicCore.isAtomicCore(curSetCompl, g) && widths.get(curSetComplString) == 0){//not yet set 
+						continue;
+					}
+					int solwidth = Math.max(widths.get(IntStringTools.intsetToInt(AtomicCore.getAtomicCore(curSet,g))),IntStringTools.intsetToInt(AtomicCore.getAtomicCore(curSetCompl,g)));
+					if(solwidth >= this.UB){
+						continue;
+					}
+					solwidth = Math.max(new GreedySplit().getSplitWidth(curSet, curSetCompl, g), solwidth);
+					if(solwidth <= this.LB) {
+						widths.set(IntStringTools.intsetToInt(g.getVertices()), solwidth);
+						break;
+					}else if(!isUBSet || solwidth <= this.UB) {
+						this.UB = solwidth;
+						isUBSet = true;
+					}
+				}
 				if(widths.get(curSetString) == 0){
 					System.out.println("Zero width: "+curSet);
 				}
-				if(widths.get(curSetString) < minWidthPerCardinality[curSet.size()]){
-					minWidthPerCardinality[curSet.size()] = widths.get(curSetString);
-				}
+				
+				
+				
+				
 			}
 			
 			
@@ -156,14 +216,17 @@ public class NLCDP {
 		Grph g;
 //		g = new PetersonGraph().petersenGraph(5,2);
 //		g = new ChvatalGenerator().chvatalGenerator();
-//		g = new Paley13Generator().paley13Generator();
-		GridTopologyGenerator GT = new GridTopologyGenerator();
-		GT.setHeight(4);
-		GT.setWidth(4);
-		g= new InMemoryGrph();
-		GT.compute(g);
+		g = new Paley13Generator().paley13Generator();
+//		g = new MCGeeGenerator().run();
+//		g = new FlowerSnarkGenerator().run(5);
+//		GridTopologyGenerator GT = new GridTopologyGenerator();
+//		GT.setHeight(4);
+//		GT.setWidth(4);
+//		g= new InMemoryGrph();
+//		GT.compute(g);
 		NLCDP dp = new NLCDP(g);
-		dp.setUpperBound(4+1);
+		dp.setUpperBound(20);
+		dp.setLowerBound(2);
 		dp.start(); 
 	}
 }

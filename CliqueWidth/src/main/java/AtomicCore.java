@@ -51,15 +51,23 @@ public class AtomicCore {
 	}
 
 	public int nCr(int n, int r){
-		r = Math.max(r, n-r);
-		int result = 1;
+		r = Math.min(r, n-r);
+		/*long result = 1;
 		for(int i=n; i>r; i--){
 			result *= i;			
 		}
 		for(int i=1; i<=n-r; i++){
 			result /= i; 
-		}
-		return result;
+		}*/
+		
+		long result = 1;
+		for (int i = 1; i <= r; i++)
+		{
+		    result *= n - (r - i);
+		    result /= r;
+		}		
+		
+		return (int)result;
 	}
 
 	public IntSet merge(IntSet X, int u, int v, Grph g){
@@ -165,9 +173,9 @@ public class AtomicCore {
 		Grph g = new PetersonGraph().petersenGraph(5, 2);
 		g = new ChvatalGenerator().chvatalGenerator();
 		g = new Paley13Generator().paley13Generator();
-		//		g = new MCGeeGenerator().run();
+				g = new MCGeeGenerator().run();
 
-//		g = new DHGenerator(15, 0.2, 0.4).run();
+		g = new DHGenerator(20, 0.2, 0.4).run();
 		//		
 		//
 		//		GridTopologyGenerator gt = new GridTopologyGenerator(); 
