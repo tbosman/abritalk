@@ -410,13 +410,19 @@ public class GreedySplit {
 		
 		HashSet<IntSet> contractedPairs = new HashSet<IntSet>();
 		for(int u : atomHeadsOne.toIntArray()) {
-			if(IntSets.union(g.getNeighbours(u), X2).size() > 0) {
-				continue;
-			}
+			
 			for(int v : atomHeadsOther.toIntArray() ) {
-				if(IntSets.union(g.getNeighbours(v), X1).size() > 0) {
-					continue;
+				//check if edge or path property is violated
+				if(g.getNeighbours(u).contains(v) || g.getNeighbours(v).contains(u) ){
+					continue; //Edge property violated
 				}
+				if(!g.getNeighbours(u).contains(IntSets.difference(g.getNeighbours(v), X2))){
+					continue;//Neighbourhood property violated
+				}
+				if(!g.getNeighbours(v).contains(IntSets.difference(g.getNeighbours(u), X1))){
+					continue; //Same
+				}
+				
 				if(IntSets.difference(g.getNeighbours(u), X).equals(IntSets.difference(g.getNeighbours(v), X)) ) {
 					boolean blocked = false;
 					for(IntSet pair: contractedPairs) {
@@ -533,7 +539,7 @@ public class GreedySplit {
 
 	public static void main(String... args) throws ParseException, IOException, GraphBuildException{
 		Grph g;
-		g = new MCGeeGenerator().run();
+//		g = new MCGeeGenerator().run();
 //		g = new Paley13Generator().paley13Generator();
 //		g = new ChvatalGenerator().chvatalGenerator();
 //		g = PetersonGraph.petersenGraph(5, 2);
@@ -541,21 +547,30 @@ public class GreedySplit {
 //		g = new FlowerSnarkGenerator().run(5);
 		
 //		g = new FranklinGraph().run();
+//		g= new ClebschGenerator().clebschGenerator();
 		
-		DHGenerator DHG = new DHGenerator(50, 0.2,0.4);
+//		g = PetersonGraph.petersenGraph(10, 3);//Is Desargues graph
+//		g = new FruchtGenerator().fruchtGenerator();
+//		g = new PappusGenerator().pappusGenerator();
+//		g = new ShrikhandeGenerator().shrikhandeGenerator();
+		
+//		DHGenerator DHG = new DHGenerator(50, 0.2,0.4);
 //				g = DHG.run();
 
 		
-		g = new DimacsReader().readGraph(new RegularFile("graphs/queen8_12.col"));
-		if(!g.containsVertex(0) && g.containsVertex(1)) {//vertex indexing starting at 1, relabel max vertex to 0
-			int maxV = g.getVertices().getGreatest();
-			g.addVertex(0);
-			IntSet mNeighbours = g.getNeighbours(maxV);
-			for(int n: mNeighbours.toIntArray()) {
-				g.addUndirectedSimpleEdge(0, n);
-			}
-			g.removeEdge(maxV);
-		}
+		g = new DimacsReader().readGraph(new RegularFile("graphs/mulsol.i.5.col"));
+//		if(!g.containsVertex(0) && g.containsVertex(1)) {//vertex indexing starting at 1, relabel max vertex to 0
+//			int maxV = g.getVertices().getGreatest();
+//			g.addVertex(0);
+//			IntSet mNeighbours = g.getNeighbours(maxV);
+//			for(int n: mNeighbours.toIntArray()) {
+//				g.addUndirectedSimpleEdge(0, n);
+//			}
+//			g.removeVertex(maxV);
+//		}
+		GrphTools.NormalizeVertexRange(g);
+		
+		System.out.println(g);
 		
 		
 		
@@ -571,8 +586,25 @@ public class GreedySplit {
 		ArrayList<IntSet> splits = GS.calculateSplits(g.getVertices(), g);
 		UnionTree kTree = GS.createUTreeFromSplits(splits, g);
 		GS.finishKTreeSplits(kTree, g);
-		System.out.println("Done, final NLC-width: "+GS.getKTreeWidth(kTree, g) );
-		System.out.println("Done, final Clique-width: "+GS.getCWDTreeWidth(kTree, g) );
+		int NLCWidth = GS.getKTreeWidth(kTree, g);
+		GS = new GreedySplit();
+		GS.doCWD = true;
+		splits = GS.calculateSplits(g.getVertices(), g);
+		kTree = GS.createUTreeFromSplits(splits, g);
+		GS.finishKTreeSplits(kTree, g);
+		int CWidth = GS.getCWDTreeWidth(kTree, g);
+		System.out.println("Done, final NLC-width: "+NLCWidth );
+		System.out.println("Done, final Clique-width: "+CWidth );
+//		
+//		GS = new GreedySplit();
+//		GS.doCWD = true;
+//		splits = GS.calculateSplits(g.getVertices(), g);
+//		GS.createUTreeFromSplits(splits, g);
+//		GS.finishKTreeSplits(kTree, g);
+//		System.out.println("Done, final NLC-width: "+GS.getKTreeWidth(kTree, g) );
+//		System.out.println("Done, final Clique-width: "+GS.getCWDTreeWidth(kTree, g) );
+	
+		
 		Grph kTGraph = kTree.toGrph();
 		kTGraph.display();
 		g.display();

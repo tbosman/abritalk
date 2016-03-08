@@ -1,8 +1,14 @@
 
+import java.io.IOException;
+
 import grph.Grph;
 import grph.algo.topology.GridTopologyGenerator;
 import grph.algo.topology.PetersonGraph;
 import grph.in_memory.InMemoryGrph;
+import grph.io.DimacsReader;
+import grph.io.GraphBuildException;
+import grph.io.ParseException;
+import toools.io.file.RegularFile;
 import toools.set.DefaultIntSet;
 import toools.set.IntSet;
 import toools.set.IntSets;
@@ -212,7 +218,7 @@ public class NLCDP {
 		
 	}
 	
-	public static void main(String... args){
+	public static void main(String... args) throws ParseException, IOException, GraphBuildException{
 		Grph g;
 //		g = new PetersonGraph().petersenGraph(5,2);
 //		g = new ChvatalGenerator().chvatalGenerator();
@@ -224,6 +230,21 @@ public class NLCDP {
 //		GT.setWidth(4);
 //		g= new InMemoryGrph();
 //		GT.compute(g);
+		
+		
+		
+		g = new DimacsReader().readGraph(new RegularFile("graphs/queen8_12.col"));
+		if(!g.containsVertex(0) && g.containsVertex(1)) {//vertex indexing starting at 1, relabel max vertex to 0
+			int maxV = g.getVertices().getGreatest();
+			g.addVertex(0);
+			IntSet mNeighbours = g.getNeighbours(maxV);
+			for(int n: mNeighbours.toIntArray()) {
+				g.addUndirectedSimpleEdge(0, n);
+			}
+			g.removeEdge(maxV);
+		}
+		
+		
 		NLCDP dp = new NLCDP(g);
 		dp.setUpperBound(20);
 		dp.setLowerBound(2);
