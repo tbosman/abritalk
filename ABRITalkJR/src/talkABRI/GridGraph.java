@@ -13,7 +13,7 @@ public class GridGraph {
 		
 		for(int i=0; i<height;  i++){
 			for(int j=0; j<width; j++){
-				Node n = graph.addNode("n"+i+"x"+j);
+				Node n = graph.addNode("n"+j+"x"+i);
 				n.setAttribute("xyz", j, i, 0);
 
 			}
@@ -21,16 +21,20 @@ public class GridGraph {
 		for(int i=0; i<height;  i++){
 			for(int j=0; j<width; j++){
 				if(i+1 < height){
-					graph.addEdge(this.id+++"", "n"+i+"x"+j, "n"+(i+1)+"x"+j);
+					graph.addEdge(this.id+++"", "n"+j+"x"+i, "n"+(j)+"x"+(i+1));
 				}
 				if(j+1 < width){
-					graph.addEdge(this.id+++"", "n"+i+"x"+j, "n"+(i)+"x"+(j+1));
+					graph.addEdge(this.id+++"", "n"+j+"x"+i, "n"+(j+1)+"x"+(i));
 				}
 								
 			}
 		}
 		
 		return graph;
+	}
+	
+	public String getNodeName(int x, int y){
+		return "n"+x+"x"+y; 
 	}
 	
 	public static void main(String... args){
